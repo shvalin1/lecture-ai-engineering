@@ -1,14 +1,13 @@
 # app.py
+import data  # データモジュール
+import database  # データベースモジュール
+import llm  # LLMモジュール
+import metrics  # 評価指標モジュール
 import streamlit as st
-import ui                   # UIモジュール
-import llm                  # LLMモジュール
-import database             # データベースモジュール
-import metrics              # 評価指標モジュール
-import data                 # データモジュール
 import torch
-from transformers import pipeline
+import ui  # UIモジュール
 from config import MODEL_NAME
-from huggingface_hub import HfFolder
+from transformers import pipeline
 
 # --- アプリケーション設定 ---
 st.set_page_config(page_title="Gemma Chatbot", layout="wide")
@@ -46,22 +45,22 @@ def load_model():
 pipe = llm.load_model()
 
 # --- Streamlit アプリケーション ---
-st.title("🤖 Gemma 2 Chatbot with Feedback")
-st.write("Gemmaモデルを使用したチャットボットです。回答に対してフィードバックを行えます。")
+st.title("🤖 Gemma 2 チャットボット")
+st.write("Gemmaモデルを使用したインタラクティブなチャットボットです。回答に対してフィードバックを提供できます。")
 st.markdown("---")
 
 # --- サイドバー ---
-st.sidebar.title("ナビゲーション")
+st.sidebar.title("📋 メニュー")
 # セッション状態を使用して選択ページを保持
 if 'page' not in st.session_state:
     st.session_state.page = "チャット" # デフォルトページ
 
 page = st.sidebar.radio(
     "ページ選択",
-    ["チャット", "履歴閲覧", "サンプルデータ管理"],
+    ["💬 チャット", "📚 履歴閲覧", "🔧 サンプルデータ管理"],
     key="page_selector",
     index=["チャット", "履歴閲覧", "サンプルデータ管理"].index(st.session_state.page), # 現在のページを選択状態にする
-    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector) # 選択変更時に状態を更新
+    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector.split(" ")[-1]) # 選択変更時に状態を更新
 )
 
 
@@ -78,4 +77,4 @@ elif st.session_state.page == "サンプルデータ管理":
 
 # --- フッターなど（任意） ---
 st.sidebar.markdown("---")
-st.sidebar.info("開発者: [Your Name]")
+st.sidebar.info("開発者: AI工学研究所")
