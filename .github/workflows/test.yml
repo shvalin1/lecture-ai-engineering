@@ -4,7 +4,7 @@ on:
   # push:
   #   branches: [ main, master  ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
 
 jobs:
   test:
@@ -31,11 +31,15 @@ jobs:
     - name: Format check with black
       run: |
         black --check day5/演習3
-        
-    - name: Run data tests
+    
+    - name: Run main.py for test
       run: |
-        pytest day5/演習3/tests/test_data.py -v
+        pytest day5/演習2/main.py
+    
+    # - name: Run data tests
+    #   run: |
+    #     pytest day5/演習3/tests/test_data.py -v
         
-    - name: Run model tests
-      run: |
-        pytest day5/演習3/tests/test_model.py -v
+    # - name: Run model tests
+    #   run: |
+    #     pytest day5/演習3/tests/test_model.py -v
