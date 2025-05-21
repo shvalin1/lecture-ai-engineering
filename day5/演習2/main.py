@@ -19,13 +19,34 @@ class DataLoader:
     @staticmethod
     def load_titanic_data(path=None):
         """Titanicデータセットを読み込む"""
-        if path:
+        if path and os.path.exists(path):
             return pd.read_csv(path)
-        else:
-            # ローカルのファイル
-            local_path = os.path.abspath("data/Titanic.csv")
-            if os.path.exists(local_path):
-                return pd.read_csv(local_path)
+        
+        # 様々なパスを試す
+        possible_paths = [
+            # 引数で指定されたパス
+            path,
+            # ローカルのデータディレクトリ
+            os.path.abspath("data/Titanic.csv"),
+            # スクリプトの場所からの相対パス
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../data/Titanic.csv"),
+            # GitHubのワークフローでは、リポジトリのルートからの相対パス
+            os.path.join(os.getcwd(), "data/Titanic.csv"),
+            # スクリプトと同じディレクトリ内のデータ
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/Titanic.csv"),
+        ]
+        
+        # すべてのパスを試す
+        for p in possible_paths:
+            if p and os.path.exists(p):
+                print(f"データセットを読み込みました: {p}")
+                return pd.read_csv(p)
+        
+        # データが見つからない場合は例外を発生させる
+        raise FileNotFoundError(
+            "Titanicデータセットが見つかりません。以下のパスを確認してください: " 
+            + ", ".join([p for p in possible_paths if p])
+        )
 
     @staticmethod
     def preprocess_titanic_data(data):
