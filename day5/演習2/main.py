@@ -1,15 +1,17 @@
 import os
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
 import pickle
 import time
+
 import great_expectations as gx
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
 
 class DataLoader:
     """データロードを行うクラス"""
@@ -21,7 +23,7 @@ class DataLoader:
             return pd.read_csv(path)
         else:
             # ローカルのファイル
-            local_path = "data/Titanic.csv"
+            local_path = os.path.abspath("data/Titanic.csv")
             if os.path.exists(local_path):
                 return pd.read_csv(local_path)
 
@@ -186,7 +188,7 @@ class ModelTester:
     def save_model(model, path="models/titanic_model.pkl"):
         model_dir = "models"
         os.makedirs(model_dir, exist_ok=True)
-        model_path = os.path.join(model_dir, f"titanic_model.pkl")
+        model_path = os.path.join(model_dir, "titanic_model.pkl")
         with open(model_path, "wb") as f:
             pickle.dump(model, f)
         return path
@@ -248,6 +250,49 @@ def test_model_performance():
     ), f"推論時間が長すぎます: {metrics['inference_time']}秒"
 
 
+def check_model_performance(metrics):
+    """
+    モデルの推論時間と精度をチェックする関数(テスト用)
+
+    Args:
+        metrics (dict): モデル評価の結果を含む辞書
+
+    Returns:
+        bool: すべての基準を満たしていればTrue、そうでなければFalse
+    """
+    performance_ok = True
+    issues = []
+
+    # F1スコアのチェック（他の指標と被らない新しい評価）
+    if "f1_score" in metrics and metrics["f1_score"] < 0.7:
+        issues.append(
+            f"F1スコアが基準値を下回っています: {metrics['f1_score']:.4f} < 0.7"
+        )
+        performance_ok = False
+
+    # モデルサイズのチェック（新しい評価基準）
+    if "model_size_mb" in metrics and metrics["model_size_mb"] > 10:
+        issues.append(
+            f"モデルサイズが大きすぎます: {metrics['model_size_mb']:.2f}MB > 10MB"
+        )
+        performance_ok = False
+
+    # 予測の安定性チェック（新しい評価基準）
+    if "prediction_variance" in metrics and metrics["prediction_variance"] > 0.1:
+        issues.append(
+            f"予測の分散が大きすぎます: {metrics['prediction_variance']:.4f} > 0.1"
+        )
+        performance_ok = False
+
+    # 結果の表示
+    if not performance_ok:
+        print("モデルパフォーマンスの問題点:")
+        for issue in issues:
+            print(f"- {issue}")
+
+    return performance_ok
+
+
 if __name__ == "__main__":
     # データロード
     data = DataLoader.load_titanic_data()
@@ -285,3 +330,7 @@ if __name__ == "__main__":
     # ベースラインとの比較
     baseline_ok = ModelTester.compare_with_baseline(metrics)
     print(f"ベースライン比較: {'合格' if baseline_ok else '不合格'}")
+
+    # モデルのパフォーマンスチェックを実行
+    performance_ok = check_model_performance(metrics)
+    print(f"パフォーマンスチェック: {'合格' if performance_ok else '不合格'}")
