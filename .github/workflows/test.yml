@@ -23,6 +23,15 @@ jobs:
         pip install pytest great_expectations pandas scikit-learn flake8 black mypy pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
+    - name: Prepare test data
+      run: |
+        mkdir -p data
+        mkdir -p day5/演習2/data
+        # サンプルTitanicデータセット作成スクリプトを準備
+        echo 'import pandas as pd; import numpy as np; np.random.seed(42); n = 100; data = {"PassengerId": range(1, n+1), "Survived": np.random.randint(0, 2, n), "Pclass": np.random.choice([1, 2, 3], n), "Name": ["Passenger " + str(i) for i in range(1, n+1)], "Sex": np.random.choice(["male", "female"], n), "Age": np.random.uniform(1, 80, n), "SibSp": np.random.randint(0, 5, n), "Parch": np.random.randint(0, 5, n), "Ticket": ["T" + str(np.random.randint(10000, 99999)) for _ in range(n)], "Fare": np.random.uniform(10, 500, n), "Cabin": [None if i < 50 else "C" + str(i) for i in range(n)], "Embarked": np.random.choice(["C", "Q", "S"], n)}; df = pd.DataFrame(data); df.to_csv("data/Titanic.csv", index=False); df.to_csv("day5/演習2/data/Titanic.csv", index=False); print("テスト用データセットを作成しました")' > create_data.py
+        # スクリプトを実行
+        python create_data.py
+        
     - name: Lint with flake8
       run: |
         flake8 day5/演習3 --count --select=E9,F63,F7,F82 --show-source --statistics
